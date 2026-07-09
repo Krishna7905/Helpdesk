@@ -45,8 +45,8 @@ COPY --from=install /app/core/node_modules ./core/node_modules
 
 COPY package.json ./
 COPY server ./server
-COPY client/dist ./client/dist
-COPY core ./core
+COPY --from=build /app/client/dist ./client/dist
+COPY --from=build /app/core ./core
 
 # Prisma Client
 COPY --from=build /app/server/src/generated ./server/src/generated
