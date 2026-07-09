@@ -7,8 +7,7 @@ COPY client/package.json ./client/
 COPY server/package.json ./server/
 COPY core/package.json ./core/
 
-RUN bun install --frozen-lockfile
-
+RUN bun install
 # Stage 2: Build
 FROM oven/bun:1 AS build
 WORKDIR /app
