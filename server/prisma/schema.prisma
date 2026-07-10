@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -13,45 +7,21 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  admin
-  agent
-}
-
-enum TicketStatus {
-  new
-  processing
-  open
-  resolved
-  closed
-}
-
-enum SenderType {
-  agent
-  customer
-}
-
-enum TicketCategory {
-  general_question
-  technical_question
-  refund_request
-}
-
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  role          Role      @default(agent)
-  createdAt     DateTime
-  updatedAt     DateTime
-  deletedAt     DateTime?
-  sessions        Session[]
+  id              String    @id
+  name            String
+  email           String    @unique
+  emailVerified   Boolean
+  image           String?
+  createdAt       DateTime
+  updatedAt       DateTime
+  role            Role      @default(agent)
+  deletedAt       DateTime?
   accounts        Account[]
-  assignedTickets Ticket[] @relation("TicketAssignee")
-  createdTickets  Ticket[] @relation("TicketCreator")
   replies         Reply[]
+  sessions        Session[]
+  assignedTickets Ticket[]  @relation("TicketAssignee")
+  createdTickets  Ticket[]  @relation("TicketCreator")
 
   @@map("user")
 }
@@ -75,7 +45,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -85,26 +54,27 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
 
 model Ticket {
-  id           Int           @id @default(autoincrement())
+  id           Int             @id @default(autoincrement())
   subject      String
   body         String
   bodyHtml     String?
-  status       TicketStatus  @default(new)
+  status       TicketStatus    @default(new)
   category     TicketCategory?
   senderName   String
   senderEmail  String
   assignedToId String?
-  assignedTo   User?         @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
   createdById  String?
-  createdBy    User?         @relation("TicketCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
   replies      Reply[]
+  assignedTo   User?           @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  createdBy    User?           @relation("TicketCreator", fields: [createdById], references: [id])
 
   @@map("ticket")
 }
@@ -112,13 +82,13 @@ model Ticket {
 model Reply {
   id         Int        @id @default(autoincrement())
   body       String
-  bodyHtml   String?
   senderType SenderType
   ticketId   Int
-  ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   userId     String?
-  user       User?      @relation(fields: [userId], references: [id])
   createdAt  DateTime   @default(now())
+  bodyHtml   String?
+  ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id])
 
   @@map("reply")
 }
@@ -132,4 +102,28 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+enum Role {
+  admin
+  agent
+}
+
+enum TicketStatus {
+  open
+  resolved
+  closed
+  new
+  processing
+}
+
+enum SenderType {
+  agent
+  customer
+}
+
+enum TicketCategory {
+  general_question
+  technical_question
+  refund_request
 }
