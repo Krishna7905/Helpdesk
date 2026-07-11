@@ -1,8 +1,13 @@
 {
   "name": "helpdesk",
   "private": true,
-  "workspaces": ["client", "server", "core"],
+  "workspaces": [
+    "client",
+    "server",
+    "core"
+  ],
   "scripts": {
+    "start": "bun run --cwd server src/index.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
@@ -11,9 +16,5 @@
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.2.3",
     "dotenv": "^17.3.1"
-  },
-  "dependencies": {
-    "@ai-sdk/google": "^4.0.12",
-    "ai": "^7.0.22"
   }
 }
