@@ -18,7 +18,7 @@ Helpdesk is an AI-powered customer support platform that streamlines ticket mana
 - **Frontend**: React, TypeScript, Vite, shadcn/ui, TanStack Query
 - **Backend**: Express 5, TypeScript, Bun
 - **Database**: PostgreSQL, Prisma ORM
-- **AI**: OpenAI GPT via Vercel AI SDK
+- **AI**: google GPT via Vercel AI SDK
 - **Auth**: Better Auth (email/password, database sessions)
 - **Job Queue**: pg-boss
 - **Error Tracking**: Sentry
@@ -78,7 +78,7 @@ e2e/      - Playwright E2E tests
    Edit `server/.env` and fill in the required values. At minimum:
    - `DATABASE_URL` - PostgreSQL connection string
    - `BETTER_AUTH_SECRET` - generate with `openssl rand -base64 32`
-   - `OPENAI_API_KEY` - for AI features
+   - `GEMINI_API_KEY` - for AI features
 
 3. **Set up the database**
 
@@ -145,7 +145,7 @@ The app is configured for single-service deployment on Railway. The Express serv
 | `BETTER_AUTH_URL` | App URL (e.g. `https://yourapp.up.railway.app`) |
 | `TRUSTED_ORIGINS` | Same as `BETTER_AUTH_URL` |
 | `WEBHOOK_SECRET` | For inbound email webhook verification |
-| `OPENAI_API_KEY` | OpenAI API key for AI features |
+| `GEMINI_API_KEY` | google API key for AI features |
 | `SENDGRID_API_KEY` | SendGrid API key for outbound email |
 | `SENDGRID_FROM_EMAIL` | Verified sender email address |
 | `SEED_ADMIN_EMAIL` | Initial admin user email |

@@ -16,14 +16,14 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.33",
+    "@ai-sdk/google": "^4.0.12",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@sendgrid/inbound-mail-parser": "^8.0.0",
     "@sendgrid/mail": "^8.1.6",
     "@sentry/node": "^10.42.0",
     "@types/multer": "^2.0.0",
-    "ai": "^6.0.100",
+    "ai": "^7.0.22",
     "better-auth": "^1.4.18",
     "core": "workspace:*",
     "cors": "^2.8.6",

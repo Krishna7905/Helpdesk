@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import type { PgBoss } from "pg-boss";
 import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import Sentry from "./sentry";
 import prisma from "../db";
 import { sendEmailJob } from "./send-email";
@@ -41,7 +41,7 @@ export async function registerAutoResolveWorker(boss: PgBoss): Promise<void> {
     let response: string;
     try {
       const { text } = await generateText({
-        model: openai("gpt-5-nano"),
+        model: google("gpt-5-nano"),
         system:
           "You are a friendly and professional support agent for Krishna. " +
           "Use ONLY the following knowledge base to answer the customer's question.\n\n" +

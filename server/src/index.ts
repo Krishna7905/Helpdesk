@@ -3,6 +3,8 @@ import Sentry from "./lib/sentry";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import "dotenv/config";
+console.log("Gemini Key:", process.env.GEMINI_API_KEY);
 import rateLimit from "express-rate-limit";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";

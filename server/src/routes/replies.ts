@@ -3,7 +3,7 @@ import { requireAuth } from "../middleware/require-auth";
 import { validate } from "../lib/validate";
 import { parseId } from "../lib/parse-id";
 import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { createReplySchema, polishReplySchema } from "core/schemas/replies.ts";
 import prisma from "../db";
 import { sendEmailJob } from "../lib/send-email";
@@ -80,88 +80,162 @@ router.post("/", requireAuth, async (req, res) => {
 
 router.post("/summarize", requireAuth, async (req, res) => {
   const ticketId = parseId(req.params.ticketId);
+
   if (!ticketId) {
-    res.status(400).json({ error: "Invalid ticket ID" });
-    return;
+    return res.status(400).json({
+      error: "Invalid ticket ID",
+    });
   }
 
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+  });
+
   if (!ticket) {
-    res.status(404).json({ error: "Ticket not found" });
-    return;
+    return res.status(404).json({
+      error: "Ticket not found",
+    });
   }
 
   if (!canAccessTicket(req.user, ticket as any)) {
-    res.status(404).json({ error: "Ticket not found" });
-    return;
+    return res.status(404).json({
+      error: "Ticket not found",
+    });
   }
 
   const replies = await prisma.reply.findMany({
     where: { ticketId },
-    orderBy: { createdAt: "asc" },
-    include: { user: { select: { name: true } } },
+    orderBy: {
+      createdAt: "asc",
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
 
   const conversation = replies
-    .map((r) => {
+    .map((reply) => {
       const sender =
-        r.senderType === "agent" ? (r.user?.name ?? "Agent") : ticket.senderName;
-      return `${sender}: ${r.body}`;
+        reply.senderType === "agent"
+          ? reply.user?.name ?? "Agent"
+          : ticket.senderName;
+
+      return `${sender}: ${reply.body}`;
     })
     .join("\n\n");
 
-  const { text } = await generateText({
-    model: openai("gpt-5-nano"),
-    system:
-      "You are a helpful assistant that summarizes support ticket conversations. " +
-      "Provide a clear, concise summary that captures the customer's issue, any actions taken, and the current status. " +
-      "Keep the summary to 2-4 sentences. Return only the summary with no preamble.",
-    prompt:
-      `Subject: ${ticket.subject}\n\n` +
-      `Customer message:\n${ticket.body}\n\n` +
-      (conversation ? `Conversation:\n${conversation}` : "No replies yet."),
-  });
+  console.log("Gemini Key:", process.env.GEMINI_API_KEY);
 
-  res.json({ summary: text });
+  try {
+    const { text } = await generateText({
+      model: google("gemini-2.0-flash"),
+
+      system:
+        "You summarize customer support conversations. Return ONLY a concise summary in 2-4 sentences.",
+
+      prompt: `
+Ticket Subject:
+${ticket.subject}
+
+Customer Message:
+${ticket.body}
+
+Conversation:
+${conversation || "No replies yet."}
+`,
+    });
+
+    return res.json({
+      summary: text,
+    });
+  } catch (error) {
+    console.error("========== GEMINI ERROR ==========");
+    console.error(error);
+    console.error("==================================");
+
+    return res.status(500).json({
+      error: "Gemini failed",
+    });
+  }
 });
 
 router.post("/polish", requireAuth, async (req, res) => {
   const ticketId = parseId(req.params.ticketId);
+
   if (!ticketId) {
-    res.status(400).json({ error: "Invalid ticket ID" });
-    return;
+    return res.status(400).json({
+      error: "Invalid ticket ID",
+    });
   }
 
   const data = validate(polishReplySchema, req.body, res);
   if (!data) return;
 
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  const ticket = await prisma.ticket.findUnique({
+    where: {
+      id: ticketId,
+    },
+  });
+
   if (!ticket) {
-    res.status(404).json({ error: "Ticket not found" });
-    return;
+    return res.status(404).json({
+      error: "Ticket not found",
+    });
   }
 
   if (!canAccessTicket(req.user, ticket as any)) {
-    res.status(404).json({ error: "Ticket not found" });
-    return;
+    return res.status(404).json({
+      error: "Ticket not found",
+    });
   }
 
-  const agentName = "Krishna";
   const customerName = ticket.senderName.split(" ")[0];
+  const agentName = "Krishna";
 
-  const { text } = await generateText({
-    model: openai("gpt-5-nano"),
-    system:
-      "You are a helpful writing assistant for a customer support team. " +
-      "Improve the given reply for clarity, professional tone, and grammar. " +
-      "Preserve the original meaning and keep the response concise. " +
-      "Return only the improved text with no preamble or explanation. " +
-      `Address the customer by their name: ${customerName}. ` +
-      `End the reply with a sign-off using the agent's name: ${agentName}.`,
-    prompt: data.body,
-  });
+  console.log("Gemini Key:", process.env.GEMINI_API_KEY);
 
-  res.json({ body: text });
+  try {
+    const { text } = await generateText({
+      model: google("gemini-2.0-flash"),
+
+      system: `
+You are a professional customer support agent.
+
+Rewrite the reply professionally.
+
+Rules:
+- Fix grammar.
+- Improve clarity.
+- Keep the same meaning.
+- Be polite.
+- Address customer as ${customerName}.
+- End with:
+
+Regards,
+${agentName}
+
+Return ONLY the rewritten reply.
+      `,
+
+      prompt: data.body,
+    });
+
+    return res.json({
+      body: text,
+    });
+  } catch (error) {
+    console.error("========== GEMINI ERROR ==========");
+    console.error(error);
+    console.error("==================================");
+
+    return res.status(500).json({
+      error: "Gemini failed",
+    });
+  }
 });
 
 export default router;

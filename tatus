@@ -1,0 +1,5 @@
+[33ma0572d1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fix: update Dockerfile for Bun workspaces
+[33m219231c[m fix: regenerate Bun lockfile
+[33mba8778b[m fix: drop frozen-lockfile to unblock build (bun.lock workspace bug)
+[33m7d9186e[m fix: regenerate corrupted bun.lock
+[33mca15aba[m feat: initial AI-powered Helpdesk implementation
